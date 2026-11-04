@@ -1,31 +1,29 @@
 ---
-title: 'Using MDX'
-description: 'Lorem ipsum dolor sit amet'
-pubDate: 'Jun 01 2024'
+title: '使用 MDX：在文章中嵌入组件'
+description: '通过中文示例了解如何在 Markdown 文章中使用组件。'
+pubDate: '2024-06-01'
 heroImage: '../../assets/blog-placeholder-5.jpg'
 ---
 
-This theme comes with the [@astrojs/mdx](https://docs.astro.build/en/guides/integrations-guide/mdx/) integration installed and configured in your `astro.config.mjs` config file. If you prefer not to use MDX, you can disable support by removing the integration from your config file.
+这是一篇 MDX 示例文章。项目已经配置了 MDX 支持，可以在文字中嵌入组件。
 
-## Why MDX?
+## 什么时候使用 MDX
 
-MDX is a special flavor of Markdown that supports embedded JavaScript & JSX syntax. This unlocks the ability to [mix JavaScript and UI Components into your Markdown content](https://docs.astro.build/en/guides/integrations-guide/mdx/#mdx-in-astro) for things like interactive charts or alerts.
+普通文章可以直接使用 Markdown。需要加入可复用的提示框、图表或交互示例时，再使用 MDX。
 
-If you have existing content authored in MDX, this integration will hopefully make migrating to Astro a breeze.
+MDX 在 Markdown 的基础上支持 JavaScript 表达式和 JSX。下面的示例把一个现有组件放进了文章正文。
 
-## Example
-
-Here is how you import and use a UI component inside of MDX.  
-When you open this page in the browser, you should see the clickable button below.
+## 组件示例
 
 import HeaderLink from '../../components/HeaderLink.astro';
 
-<HeaderLink href="#" onclick="alert('clicked!')">
-	Embedded component in MDX
-</HeaderLink>
+<HeaderLink href="/blog">返回文章列表 →</HeaderLink>
 
-## More Links
+上面的链接由组件生成，点击后会返回文章列表。它不需要额外的客户端 JavaScript。
 
-- [MDX Syntax Documentation](https://mdxjs.com/docs/what-is-mdx)
-- [Astro Usage Documentation](https://docs.astro.build/en/basics/astro-pages/#markdownmdx-pages)
-- **Note:** [Client Directives](https://docs.astro.build/en/reference/directives-reference/#client-directives) are still required to create interactive components. Otherwise, all components in your MDX will render as static HTML (no JavaScript) by default.
+## 进一步阅读
+
+- [MDX 语法文档](https://mdxjs.com/docs/what-is-mdx)
+- [Astro 的 MDX 集成说明](https://docs.astro.build/en/guides/integrations-guide/mdx/)
+
+如果要使用 React、Vue 等框架的交互组件，还需要按组件的使用方式配置相应的客户端指令。
