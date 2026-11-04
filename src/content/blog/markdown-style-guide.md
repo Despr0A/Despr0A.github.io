@@ -1,214 +1,123 @@
 ---
-title: 'Markdown Style Guide'
-description: 'Here is a sample of some basic Markdown syntax that can be used when writing Markdown content in Astro.'
-pubDate: 'Jun 19 2024'
+title: 'Markdown 中文排版指南'
+description: '预览中文标题、段落、图片、引用、表格与代码块的显示效果。'
+pubDate: '2024-06-19'
+updatedDate: '2026-11-04'
 heroImage: '../../assets/blog-placeholder-1.jpg'
 ---
 
-Here is a sample of some basic Markdown syntax that can be used when writing Markdown content in Astro.
+这是一篇排版示例，展示中文文章中常见的内容形式。可以用它检查中文标点、中英文混排和手机上的阅读效果。
 
-## Headings
+## 标题层次
 
-The following HTML `<h1>`—`<h6>` elements represent six levels of section headings. `<h1>` is the highest section level while `<h6>` is the lowest.
+文章标题已经显示在页面顶部。正文从二级标题开始，再根据内容使用更小的标题。
 
-# H1
+### 三级标题示例
 
-## H2
+#### 四级标题示例
 
-### H3
+##### 五级标题示例
 
-#### H4
+###### 六级标题示例
 
-##### H5
+## 段落与强调
 
-###### H6
+一段文字围绕一个主题展开。中文阅读需要适当的行距和段落间距；当一行同时出现 Astro、Markdown 和数字 2026 时，也应该保持自然的节奏。
 
-## Paragraph
+这是另一个段落。可以使用**粗体强调重点**、_斜体标注术语_，或通过 `行内代码` 标记变量和命令。全角标点示例：“引号”、（括号）、《书名》、顿号与句号。
 
-Xerum, quo qui aut unt expliquam qui dolut labo. Aque venitatiusda cum, voluptionse latur sitiae dolessi aut parist aut dollo enim qui voluptate ma dolestendit peritin re plis aut quas inctum laceat est volestemque commosa as cus endigna tectur, offic to cor sequas etum rerum idem sintibus eiur? Quianimin porecus evelectur, cum que nis nust voloribus ratem aut omnimi, sitatur? Quiatem. Nam, omnis sum am facea corem alique molestrunt et eos evelece arcillit ut aut eos eos nus, sin conecerem erum fuga. Ri oditatquam, ad quibus unda veliamenimin cusam et facea ipsamus es exerum sitate dolores editium rerore eost, temped molorro ratiae volorro te reribus dolorer sperchicium faceata tiustia prat.
+## 图片
 
-Itatur? Quiatae cullecum rem ent aut odis in re eossequodi nonsequ idebis ne sapicia is sinveli squiatum, core et que aut hariosam ex eat.
-
-## Images
-
-### Syntax
+给图片写清楚替代文字，方便读者在图片无法加载时理解内容。
 
 ```markdown
-![Alt text](./full/or/relative/path/of/image)
+![文章配图示例](../../assets/blog-placeholder-about.jpg)
 ```
 
-### Output
+![文章配图示例](../../assets/blog-placeholder-about.jpg)
 
-![blog placeholder](../../assets/blog-placeholder-about.jpg)
+## 引用
 
-## Blockquotes
-
-The blockquote element represents content that is quoted from another source, optionally with a citation which must be within a `footer` or `cite` element, and optionally with in-line changes such as annotations and abbreviations.
-
-### Blockquote without attribution
-
-#### Syntax
+引用内容可以包含强调和链接。引用他人观点时，需要补充实际出处。
 
 ```markdown
-> Tiam, ad mint andaepu dandae nostion secatur sequo quae.  
-> **Note** that you can use _Markdown syntax_ within a blockquote.
+> 先把一个问题说明白，再继续探索下一个问题。
+> **提示：**这是一段用于演示格式的文字。
 ```
 
-#### Output
+> 先把一个问题说明白，再继续探索下一个问题。
+> **提示：**这是一段用于演示格式的文字。
 
-> Tiam, ad mint andaepu dandae nostion secatur sequo quae.  
-> **Note** that you can use _Markdown syntax_ within a blockquote.
+## 表格
 
-### Blockquote with attribution
+| 内容类型 | 写法 | 适用场景 |
+| --- | --- | --- |
+| 强调 | **重点内容** | 突出结论 |
+| 代码 | `const title = '你好';` | 变量与短命令 |
+| 链接 | [返回文章列表](/blog) | 延伸阅读 |
 
-#### Syntax
+表格较宽时，可以在表格区域横向滚动。
 
-```markdown
-> Don't communicate by sharing memory, share memory by communicating.<br>
-> — <cite>Rob Pike[^1]</cite>
-```
+## 代码块
 
-#### Output
-
-> Don't communicate by sharing memory, share memory by communicating.<br>
-> — <cite>Rob Pike[^1]</cite>
-
-[^1]: The above quote is excerpted from Rob Pike's [talk](https://www.youtube.com/watch?v=PAAkCSZUG1c) during Gopherfest, November 18, 2015.
-
-## Tables
-
-### Syntax
-
-```markdown
-| Italics   | Bold     | Code   |
-| --------- | -------- | ------ |
-| _italics_ | **bold** | `code` |
-```
-
-### Output
-
-| Italics   | Bold     | Code   |
-| --------- | -------- | ------ |
-| _italics_ | **bold** | `code` |
-
-## Code Blocks
-
-### Syntax
-
-we can use 3 backticks ``` in new line and write snippet and close with 3 backticks on new line and to highlight language specific syntax, write one word of language name after first 3 backticks, for eg. html, javascript, css, markdown, typescript, txt, bash
-
-````markdown
-```html
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Example HTML5 Document</title>
-  </head>
-  <body>
-    <p>Test</p>
-  </body>
-</html>
-```
-````
-
-### Output
+在代码块开头标注语言，可以获得相应的语法高亮。
 
 ```html
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <title>Example HTML5 Document</title>
+    <title>中文页面示例</title>
   </head>
   <body>
-    <p>Test</p>
+    <p>你好，世界！Hello, world!</p>
   </body>
 </html>
 ```
 
-## List Types
+下面这一行较长，可以用来检查代码区域在手机上的横向滚动：
 
-### Ordered List
-
-#### Syntax
-
-```markdown
-1. First item
-2. Second item
-3. Third item
+```javascript
+const message = '这是一条用于检查代码块横向滚动的中文长文本，代码应保留原有缩进与换行，同时避免把整个页面撑出屏幕。';
+console.log(message);
 ```
 
-#### Output
+## 列表
 
-1. First item
-2. Second item
-3. Third item
+### 有序列表
 
-### Unordered List
+1. 确定文章想回答的问题。
+2. 整理相关材料和例子。
+3. 检查表达，再发布文章。
 
-#### Syntax
+### 无序列表
 
-```markdown
-- List item
-- Another item
-- And another item
-```
+- 学习笔记
+- 项目实践
+- 阅读记录
 
-#### Output
+### 嵌套列表
 
-- List item
-- Another item
-- And another item
+- 项目记录
+  - 问题背景
+  - 实现过程
+  - 验证结果
+- 阅读笔记
+  - 原文观点
+  - 个人理解
 
-### Nested list
+## 其他常见元素
 
-#### Syntax
+<abbr title="图形交换格式">GIF</abbr> 是一种图像格式。
 
-```markdown
-- Fruit
-  - Apple
-  - Orange
-  - Banana
-- Dairy
-  - Milk
-  - Cheese
-```
+下标示例：H<sub>2</sub>O。
 
-#### Output
+上标示例：x<sup>2</sup> + y<sup>2</sup>。
 
-- Fruit
-  - Apple
-  - Orange
-  - Banana
-- Dairy
-  - Milk
-  - Cheese
+键盘操作示例：按 <kbd>Ctrl</kbd> + <kbd>S</kbd> 保存。
 
-## Other Elements — abbr, sub, sup, kbd, mark
+可以用 <mark>高亮标记</mark> 提醒读者注意一小段文字。
 
-### Syntax
+脚注可以补充背景信息，而不打断正文阅读。[^note]
 
-```markdown
-<abbr title="Graphics Interchange Format">GIF</abbr> is a bitmap image format.
-
-H<sub>2</sub>O
-
-X<sup>n</sup> + Y<sup>n</sup> = Z<sup>n</sup>
-
-Press <kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>Delete</kbd> to end the session.
-
-Most <mark>salamanders</mark> are nocturnal, and hunt for insects, worms, and other small creatures.
-```
-
-### Output
-
-<abbr title="Graphics Interchange Format">GIF</abbr> is a bitmap image format.
-
-H<sub>2</sub>O
-
-X<sup>n</sup> + Y<sup>n</sup> = Z<sup>n</sup>
-
-Press <kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>Delete</kbd> to end the session.
-
-Most <mark>salamanders</mark> are nocturnal, and hunt for insects, worms, and other small creatures.
+[^note]: 这是一条中文脚注示例。
