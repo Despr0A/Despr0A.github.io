@@ -34,6 +34,15 @@ const { title, description, image = FallbackImage } = Astro.props;
 
 <Font cssVariable="--font-atkinson" preload />
 
+<script is:inline>
+	let theme;
+	try { theme = localStorage.getItem('desplog-theme'); } catch {}
+	document.documentElement.classList.toggle(
+		'dark',
+		theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches),
+	);
+</script>
+
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 

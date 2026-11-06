@@ -1,40 +1,52 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
+// Axi-Theme homepage structure, adapted to Desplog's own profile and content.
+import { getCollection } from 'astro:content';
+import avatar from '../assets/me.png';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PostList from '../components/PostList.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+const posts = (await getCollection('blog')).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>你好，欢迎来到 {SITE_TITLE}</h1>
-			<p>这里是Despro的个人主页！！！</p>
-			<section aria-labelledby="intro-title">
-				<h2 id="intro-title">关于我</h2>
+<SiteLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+	<section class="profile" aria-label="个人介绍">
+		<img
+			class="profile-mark"
+			src={avatar.src}
+			alt="你好"
+			width="140"
+			height="140"
+			style="object-fit: cover; aspect-ratio: 1; height: auto;"
+		/>
+		<div>
+			<h1>Desperation_Prof</h1>
+			<p class="muted">这里是 Despro 的个人主页</p>
+			<div class="profile-links">
+				<a class="pill" href="https://github.com/Despr0A">GitHub ↗</a>
+				<a class="pill" href="/rss.xml">RSS ↗</a>
+			</div>
+		</div>
+	</section>
+	<div class="home-content">
+		<section class="home-section" aria-labelledby="intro-title">
+			<h2 id="intro-title">About</h2>
+			<div>
 				<p>听好了，所谓Desperation_Prof就是绝望专家，他见证了超高校级的绝望，是要独自面临失败主义和绥靖主义的斗士，的绝望应对专家参上！</p>
-				<p><a href="/about">走近一点，了解更多 →</a></p>
-			</section>
-			<section aria-labelledby="projects-title">
-				<h2 id="projects-title">项目作品</h2>
-				<p>整理中，待上线</p>
-			</section>
-			<section aria-labelledby="posts-title">
-				<h2 id="posts-title">文章与笔记</h2>
+				<div class="section-end"><a class="text-link" href="/about/">More about me <span aria-hidden="true">→</span></a></div>
+			</div>
+		</section>
+		<section class="home-section" aria-labelledby="projects-title">
+			<h2 id="projects-title">Projects</h2>
+			<div><p>整理中，待上线</p></div>
+		</section>
+		<section class="home-section" aria-labelledby="posts-title">
+			<h2 id="posts-title">Latest Posts</h2>
+			<div>
 				<p>一些迷思以及笔记，无足挂齿，希望有所帮助</p>
-				<p><a href="/blog">浏览全部文章 →</a></p>
-			</section>
-		</main>
-		<Footer />
-	</body>
-</html>
-<style>
-	section {
-		margin-top: 2.5em;
-	}
-</style>
+				<PostList posts={posts.slice(0, 2)} compact />
+				<div class="section-end" style="margin-top: 16px"><a class="text-link" href="/blog/">View all posts <span aria-hidden="true">→</span></a></div>
+			</div>
+		</section>
+	</div>
+</SiteLayout>

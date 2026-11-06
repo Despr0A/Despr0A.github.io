@@ -5,7 +5,6 @@ import { satteri } from '@astrojs/markdown-satteri';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
 
-// https://astro.build/config
 export default defineConfig({
 	site: 'https://despr0a.github.io/',
 	integrations: [mdx(), sitemap()],

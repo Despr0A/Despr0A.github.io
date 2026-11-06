@@ -1,64 +1,80 @@
 ---
+// Adapted from Axi-Theme; rewritten for Astro 7 without Tailwind dependencies.
 import { SITE_TITLE } from '../consts';
-import HeaderLink from './HeaderLink.astro';
+
+const pathname = Astro.url.pathname;
+const links = [
+	{ href: '/blog/', label: 'Blog' },
+	{ href: '/about/', label: 'About' },
+	{ href: '/rss.xml', label: 'RSS' },
+];
 ---
 
-<header>
-	<nav aria-label="主导航">
-		<h2><a href="/">{SITE_TITLE}</a></h2>
-		<div class="internal-links">
-			<HeaderLink href="/">首页</HeaderLink>
-			<HeaderLink href="/blog">文章</HeaderLink>
-			<HeaderLink href="/about">关于我</HeaderLink>
-		</div>
-		<a class="rss-link" href="/rss.xml">RSS 订阅</a>
-	</nav>
+<header class="site-header">
+	<a class="brand" href="/">{SITE_TITLE}</a>
+	<div class="header-actions">
+		<nav class="nav-links" id="main-navigation" aria-label="主导航">
+			{links.map(({ href, label }) => (
+				<a href={href} aria-current={pathname.startsWith(href.replace(/\/$/, '')) ? 'page' : undefined}>{label}</a>
+			))}
+		</nav>
+		<button class="icon-button" id="theme-toggle" aria-label="深色模式" aria-pressed="false" title="深色模式">
+			<svg class="theme-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z" /></svg>
+			<svg class="theme-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>
+		</button>
+		<button class="icon-button menu-toggle" id="menu-toggle" aria-label="打开导航菜单" aria-expanded="false" aria-controls="main-navigation">
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+		</button>
+	</div>
 </header>
-<style>
-	header {
-		margin: 0;
-		padding: 0 1em;
-		background: white;
-		box-shadow: 0 2px 8px rgba(var(--black), 5%);
+
+<script>
+	const header = document.querySelector<HTMLElement>('.site-header')!;
+	const themeButton = document.querySelector<HTMLButtonElement>('#theme-toggle')!;
+	const menuButton = document.querySelector<HTMLButtonElement>('#menu-toggle')!;
+	const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
+	let explicitTheme = false;
+	try { explicitTheme = ['light', 'dark'].includes(localStorage.getItem('desplog-theme') || ''); } catch {}
+
+	function updateThemeButton() {
+		const dark = document.documentElement.classList.contains('dark');
+		themeButton.setAttribute('aria-pressed', String(dark));
+		themeButton.title = dark ? '切换到浅色模式' : '切换到深色模式';
 	}
-	h2 {
-		margin: 0;
-		font-size: 1em;
-	}
-	h2 a,
-	h2 a.active {
-		text-decoration: none;
-	}
-	nav {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5em;
-	}
-	nav a {
-		padding: 1em 0.5em;
-		color: rgb(var(--black));
-		border-bottom: 4px solid transparent;
-		text-decoration: none;
-		white-space: nowrap;
-	}
-	nav a.active {
-		text-decoration: none;
-		border-bottom-color: var(--accent);
-	}
-	.internal-links {
-		display: flex;
-		flex-wrap: wrap;
-	}
-	@media (max-width: 720px) {
-		.rss-link {
-			display: none;
+	updateThemeButton();
+	themeButton.addEventListener('click', () => {
+		const dark = document.documentElement.classList.toggle('dark');
+		explicitTheme = true;
+		try { localStorage.setItem('desplog-theme', dark ? 'dark' : 'light'); } catch {}
+		updateThemeButton();
+	});
+	colorScheme.addEventListener('change', (event) => {
+		if (!explicitTheme) {
+			document.documentElement.classList.toggle('dark', event.matches);
+			updateThemeButton();
 		}
+	});
+
+	function closeMenu() {
+		header.classList.remove('menu-open');
+		menuButton.setAttribute('aria-expanded', 'false');
+		menuButton.setAttribute('aria-label', '打开导航菜单');
 	}
-	@media (max-width: 360px) {
-		nav {
-			flex-direction: column;
-			padding-top: 0.75em;
+	menuButton.addEventListener('click', () => {
+		const open = header.classList.toggle('menu-open');
+		menuButton.setAttribute('aria-expanded', String(open));
+		menuButton.setAttribute('aria-label', open ? '关闭导航菜单' : '打开导航菜单');
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && header.classList.contains('menu-open')) {
+			closeMenu();
+			menuButton.focus();
 		}
-	}
-</style>
+	});
+	document.addEventListener('click', (event) => {
+		if (event.target instanceof Node && !header.contains(event.target)) closeMenu();
+	});
+	const updateHeader = () => header.classList.toggle('scrolled', window.scrollY > 20);
+	updateHeader();
+	window.addEventListener('scroll', updateHeader, { passive: true });
+</script>
