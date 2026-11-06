@@ -1,0 +1,29 @@
+---
+// Adapted from Axi-Theme PostPreview; uses Desplog's existing content schema.
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+	posts: CollectionEntry<'blog'>[];
+	compact?: boolean;
+}
+const { posts, compact = false } = Astro.props;
+---
+
+<ul class:list={['post-list', { compact }]}>
+	{posts.map((post) => (
+		<li class="post-card">
+			<a href={`/blog/${post.id}/`}>
+				{!compact && post.data.heroImage && <Image class="post-cover" src={post.data.heroImage} width={560} alt="" />}
+				<FormattedDate date={post.data.pubDate} />
+				<div class="post-copy">
+					{compact ? <h3>{post.data.title}</h3> : <h2>{post.data.title}</h2>}
+					<p>{post.data.description}</p>
+					{!compact && <small>阅读约 {Math.max(1, Math.ceil((post.body?.length || 0) / 500))} 分钟</small>}
+				</div>
+				<span class="post-arrow" aria-hidden="true">→</span>
+			</a>
+		</li>
+	))}
+</ul>
