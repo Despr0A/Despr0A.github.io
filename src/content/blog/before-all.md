@@ -2,7 +2,7 @@
 title: '在所有之前--关于我为什么要写博客'
 description: '一篇关于我为什么要写博客的文章。'
 pubDate: '2026-11-4'
-heroImage: '../../assets/myfirstblog.png'
+heroImage: '../../assets/Blog/myfirstblog.png'
 ---
 
 > 博客即记录

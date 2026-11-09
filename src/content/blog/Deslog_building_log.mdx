@@ -2,7 +2,7 @@
 title: '网站构建日志1-防剧透文字'
 description: '如何实现防剧透文字！！！'
 pubDate: '2026-11-9'
-heroImage: '../../assets/myfirstblog.png'
+heroImage: '../../assets/Blog/Deslog_building1.png'
 ---
 
 import { Image } from 'astro:assets';
@@ -10,7 +10,7 @@ import { Code } from 'astro:components';
 import Spoiler from '../../components/Spoiler.astro';
 import spoilerSource from '../../components/Spoiler.astro?raw';
 import supportSource from '../../components/SpoilerSupport.astro?raw';
-import demoImage from '../../assets/myfirstblog.png';
+import demoImage from '../../assets/Demo/Mem.png';
 
 ## 第一份功能-防剧透文字
 谁不希望在自己的网站上加入一个防剧透文字功能呢（当然还有图片）？防剧透文字的实现：通过检测光标/点击位置实现对文字模糊属性的转换。如果我们使用简单的``filter: blur(3px)``文字属性实现，文字就会很粗暴地被模糊处理。这样读起来就不太方便，也不符合我常用的论坛的防剧透文字样式。开发路径大概是
@@ -66,7 +66,7 @@ import demoImage from '../../assets/myfirstblog.png';
 ```mdx
 import { Image } from 'astro:assets';
 import Spoiler from '../../components/Spoiler.astro';
-import demoImage from '../../assets/SpoilerDemo.png';
+import demoImage from '../../assets/Demo/Mem.png';
 
 <Spoiler image mode="click">
   <Image src={demoImage} alt="随便找张图片应付一下" width={480} loading="lazy" />
@@ -193,5 +193,3 @@ import Spoiler from '../../components/Spoiler.astro';
 
 这里的路径适用于 `src/content/blog/` 中的文章。导入语句写在文章信息区之后；文章信息区保留标题、摘要、日期等字段，不要把 JavaScript 导入写进 YAML。
 
-## Prompt Engineering Show
-我觉得这样实现下来其实效果就已经不错了。
