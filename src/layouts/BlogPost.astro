@@ -8,7 +8,14 @@ import { SITE_TITLE } from '../consts';
 
 type Props = CollectionEntry<'blog'>['data'] & { headings?: MarkdownHeading[] };
 const { title, description, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const toc: (MarkdownHeading & { children: MarkdownHeading[] })[] = [];
+for (const heading of headings) {
+	if (heading.depth === 2 || (heading.depth === 3 && toc.length === 0)) {
+		toc.push({ ...heading, children: [] });
+	} else if (heading.depth === 3) {
+		toc[toc.length - 1].children.push(heading);
+	}
+}
 ---
 
 <SiteLayout title={`${title} • ${SITE_TITLE}`} {description} image={heroImage} class="article-layout">
@@ -22,13 +29,28 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
 			</div>
 		</header>
 		{heroImage && <Image class="hero-image" width={1020} src={heroImage} alt={`${title}的封面`} loading="eager" />}
-		{toc.length > 0 && (
-			<details class="toc" open>
-				<summary>TABLE OF CONTENTS · 目录</summary>
-				<ol>{toc.map((heading) => <li class:list={{ subheading: heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol>
-			</details>
-		)}
-		<div class="prose"><slot /></div>
+		<div class:list={['article-body', { 'has-toc': toc.length > 0 }]}>
+			{toc.length > 0 && (
+				<aside class="article-sidebar">
+					<details class="toc" open>
+						<summary>TABLE OF CONTENTS · 目录</summary>
+						<nav aria-label="文章目录">
+							<ol>{toc.map((heading, index) => (
+								<li>
+									<a href={`#${heading.slug}`}><span class="toc-number">{index + 1}</span><span>{heading.text}</span></a>
+									{heading.children.length > 0 && (
+										<ol>{heading.children.map((child, childIndex) => (
+											<li><a href={`#${child.slug}`}><span class="toc-number">{index + 1}.{childIndex + 1}</span><span>{child.text}</span></a></li>
+										))}</ol>
+									)}
+								</li>
+							))}</ol>
+						</nav>
+					</details>
+				</aside>
+			)}
+			<div class="prose"><slot /></div>
+		</div>
 		<div class="article-bottom"><a href="/blog/">← 返回文章列表</a><a href="#main-content">回到顶部 ↑</a></div>
 	</article>
 </SiteLayout>
