@@ -3,6 +3,7 @@ import type { ImageMetadata } from 'astro';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SpoilerSupport from '../components/SpoilerSupport.astro';
 
 interface Props {
 	title: string;
@@ -28,5 +29,6 @@ const { title, description, image, class: className } = Astro.props;
 			</main>
 			<Footer />
 		</div>
+		<SpoilerSupport />
 	</body>
 </html>

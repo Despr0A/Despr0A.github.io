@@ -1,15 +1,21 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
+import Spoiler from '../components/Spoiler.astro';
 import { SITE_TITLE } from '../consts';
 ---
 
 <SiteLayout title={`关于我 • ${SITE_TITLE}`} description="了解这个小站，以及这里的项目与文章。" class="article-layout">
 	<div class="page-heading"><h1>About</h1><p class="muted">关于我，也关于这个小站。</p></div>
 	<div class="prose">
-		<p>你好，欢迎来到我的个人主页。个人介绍和联系方式正在整理。</p>
-		<h2>关于这个小站</h2>
-		<p>这里将收录项目作品、学习笔记和文章，希望把探索的过程和有用的经验慢慢留下来。</p>
+		<p>学生/<Spoiler>绝望对策专家</Spoiler> </p>
+		<p>我是一名上海交通大学的硕士研究生，目前在做具身智能相关的研究。</p>
+		<p>科研上，目前我的研究兴趣点为Agentic Robotics，我认为使用agent做长程规划是目前具身智能产业转换的重要方向。</p>
+		<p> 生活中，我是杂食系ACGN爱好者，偏好《命运石之门0》。最近开发的个人项目主要聚焦量化交易的消息分析助手。并且也正在试着写一些博客来记录我都科研/生活小故事</p>
+		<h2>关于Deslog</h2>
+		<p>这里将收录项目作品、学习笔记和其他杂谈文章。</p>
+		<h2 id="projects">My Projects View</h2>
+		<p>To Be Continued. 正在整理中</p>
 		<h2>从这里开始</h2>
-		<p>你可以先<a href="/blog/">浏览文章</a>，也可以通过 <a href="/rss.xml">RSS 订阅</a>关注后续更新。</p>
+		<p>你可以先<a href="/blog/">看几篇杂谈</a>。以后应该也会有项目开发的经验经历相关的整理文字。</p>
 	</div>
 </SiteLayout>

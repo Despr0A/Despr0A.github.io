@@ -1,0 +1,47 @@
+<style is:global>
+	button:is(.spoiler, .spoiler-click) {
+		padding: 0 0.2em;
+		border: 0;
+		border-radius: 4px;
+		background: hsl(var(--muted));
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+	button:is(.spoiler, .spoiler-click) > span {
+		display: inline-block;
+		filter: blur(3px);
+		transition: filter 0.2s ease;
+	}
+	button.spoiler-image { max-width: 100%; padding: 0; overflow: hidden; vertical-align: middle; }
+	button.spoiler-image > span { display: block; filter: blur(30px); }
+	button.spoiler-image img { display: block; max-width: 100%; height: auto; }
+	button:is(.spoiler, .spoiler-click)[aria-pressed='true'] > span { filter: none; }
+	@media (hover: hover) and (pointer: fine) {
+		button.spoiler:not(.spoiler-click):hover > span { filter: none; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		button:is(.spoiler, .spoiler-click) > span { transition: none; }
+	}
+</style>
+
+<script>
+	const selector = 'button.spoiler, button.spoiler-click';
+
+	function closeSpoilers() {
+		document.querySelectorAll<HTMLButtonElement>(selector).forEach((button) => {
+			button.setAttribute('aria-pressed', 'false');
+		});
+	}
+
+	document.addEventListener('click', (event) => {
+		if (!(event.target instanceof Element)) return;
+		const button = event.target.closest<HTMLButtonElement>(selector);
+		if (button) {
+			button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+		}
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') closeSpoilers();
+	});
+</script>

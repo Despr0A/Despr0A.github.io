@@ -1,0 +1,197 @@
+---
+title: '网站构建日志1-防剧透文字'
+description: '如何实现防剧透文字！！！'
+pubDate: '2026-11-9'
+heroImage: '../../assets/myfirstblog.png'
+---
+
+import { Image } from 'astro:assets';
+import { Code } from 'astro:components';
+import Spoiler from '../../components/Spoiler.astro';
+import spoilerSource from '../../components/Spoiler.astro?raw';
+import supportSource from '../../components/SpoilerSupport.astro?raw';
+import demoImage from '../../assets/myfirstblog.png';
+
+## 第一份功能-防剧透文字
+谁不希望在自己的网站上加入一个防剧透文字功能呢（当然还有图片）？防剧透文字的实现：通过检测光标/点击位置实现对文字模糊属性的转换。如果我们使用简单的``filter: blur(3px)``文字属性实现，文字就会很粗暴地被模糊处理。这样读起来就不太方便，也不符合我常用的论坛的防剧透文字样式。开发路径大概是
+1. 先尝试使用filter属性，发现完全不符合我的预期。
+2. 询问codex大人，原来这种效果是防剧透文字，codex大人实现了一版。
+3. 进行一个Google寻找其他人的实现方式（https://awsl.tv/35）。
+4. 回到codex，参考其他人的实现方式，把这项功能内置化实现。
+
+## 效果演示
+几种实现效果
+### 固定模糊
+
+只设置 `filter: blur(3px)` 时，文字会一直保持模糊。这个例子没有绑定任何交互，悬停或点击都不会恢复清晰：
+
+<p>固定模糊：<span style="display: inline-block; filter: blur(3px);">你可以复制查看本段文字，但是这样就很难直接阅读了（</span></p>
+
+```html
+<span style="display: inline-block; filter: blur(3px);">你可以复制查看本段文字，但是这样就很难直接阅读了（</span>
+```
+
+### 悬停预览与点击保持
+
+下面的文字可以操作：使用鼠标时，移入可临时查看，移出后重新模糊；点击则保持显示，再次点击取消保持。
+
+<p>悬停或点击查看：<Spoiler>现在这一段应该就算还能阅读了。</Spoiler></p>
+
+```astro
+<Spoiler>现在这一段应该就算还能阅读了。</Spoiler>
+```
+
+取消保持后，如果鼠标仍停留在文字上方，悬停预览仍然生效，需要移开鼠标才会重新模糊。
+
+### 仅点击显示
+
+将 `mode` 设置为 `click` 后，鼠标经过不会显示内容，必须点击才会切换状态：
+
+<p>点击查看：<Spoiler mode="click">还有持久化显示的噢。</Spoiler></p>
+
+```astro
+<Spoiler mode="click">还有持久化显示的噢。</Spoiler>
+```
+
+点击一个防剧透区域只切换它本身状态，点击空白或其他非防剧透区域不会取消保持显示；按 Escape 才取消全部保持。
+
+### 图片防剧透
+
+图片模式沿用同一套交互，通过 `image` 属性启用更高的模糊强度。下面使用本文封面作为演示，点击图片可以查看，再次点击可以收起：
+
+<Spoiler image mode="click">
+	<Image src={demoImage} alt="随便找张图片应付一下" width={480} loading="lazy" />
+</Spoiler>
+
+```mdx
+import { Image } from 'astro:assets';
+import Spoiler from '../../components/Spoiler.astro';
+import demoImage from '../../assets/SpoilerDemo.png';
+
+<Spoiler image mode="click">
+  <Image src={demoImage} alt="随便找张图片应付一下" width={480} loading="lazy" />
+</Spoiler>
+```
+
+## 从模糊样式到可切换状态
+
+模糊本身由 CSS 完成，点击后的保持状态由按钮的 `aria-pressed` 属性记录。它同时向辅助技术表达按钮是否处于按下状态。
+
+| 当前情况 | `aria-pressed` | 是否清晰 |
+| --- | --- | --- |
+| 初始状态 | `false` | 否 |
+| 默认模式下悬停 | `false` | 是，移出后恢复 |
+| 点击后保持显示 | `true` | 是，移出后仍显示 |
+| 取消保持显示 | `false` | 由是否仍在悬停决定；仅点击模式立即恢复模糊 |
+
+页面上的基本结构是一个按钮，内部的 `span` 包住需要模糊的内容：
+
+```html
+<button type="button" class="spoiler" aria-pressed="false">
+  <span>这其实是一个大号按钮来着</span>
+</button>
+```
+
+只模糊内部内容，可以让按钮的焦点轮廓保持清晰。`display: inline-block` 为内层文字建立可应用滤镜的盒子；`type="button"` 则避免按钮在表单中触发提交。
+
+```css
+/* 默认模糊 */
+button:is(.spoiler, .spoiler-click) > span {
+  display: inline-block;
+  filter: blur(3px);
+}
+
+/* 点击后保持显示 */
+button:is(.spoiler, .spoiler-click)[aria-pressed='true'] > span {
+  filter: none;
+}
+
+/* 只有有光标的才能启用预览 */
+@media (hover: hover) and (pointer: fine) {
+  button.spoiler:not(.spoiler-click):hover > span {
+    filter: none;
+  }
+}
+```
+
+`spoiler` 和 `spoiler-click` 共用基础样式，只有前者参与悬停规则。悬停不会改变 `aria-pressed`，所以临时预览与点击保持可以分别处理。
+
+## 进一步封装为可复用的 Astro 组件
+
+实现分为两个文件：`Spoiler.astro` 负责生成按钮，`SpoilerSupport.astro` 提供全站共用的样式和交互。下面的源码展示直接读取项目中的对应文件，内容与本文演示使用的实现一致。
+
+### 按钮组件
+
+`src/components/Spoiler.astro`：
+
+<Code code={spoilerSource} lang="astro" />
+
+`mode` 决定使用哪个类名，`image` 决定是否启用图片样式；`<slot />` 接收组件标签之间的文字或图片。调用时只需要导入组件，不必在每个页面重新写按钮结构。
+
+### 公共样式与交互
+
+`src/components/SpoilerSupport.astro`：
+
+<Code code={supportSource} lang="astro" />
+
+这里使用一份页面级点击监听。通过 `closest()` 找到被点击内容所属的防剧透按钮，因此点击按钮内的文字或图片也能切换该按钮的状态，不影响其他防剧透内容；点击非防剧透区域时，不改变任何保持显示的状态。Escape 使用单独的键盘监听取消全部保持，Enter 和空格由原生按钮处理。
+
+`<style is:global>` 让样式也能匹配 Markdown 生成的按钮。普通 Astro `<style>` 默认有作用域限制，仅把它移到一个没有这些按钮的公共组件里，并不能自动覆盖文章内容。[Astro 样式说明](https://docs.astro.build/en/guides/styling/)
+
+
+### 在公共布局中加载一次
+
+项目的首页、关于页和文章页都使用 `SiteLayout.astro`，因此公共支持代码在这里加载即可。下面只展示需要合并到现有布局中的部分：
+
+```astro
+---
+import SpoilerSupport from '../components/SpoilerSupport.astro';
+---
+
+<!-- 放在布局的 body 内；已有页面结构照常保留 -->
+<SpoilerSupport />
+```
+
+这一步同时提供全局 CSS 和浏览器脚本。`<Spoiler>` 负责生成标记，布局负责提供效果；若另一个页面没有使用这份布局，就需要在它自己的布局中加入支持组件。
+
+## 在页面与文章中使用
+
+### Astro 页面
+
+在 `src/pages/` 中的 `.astro` 文件顶部已有的 `---` 区间导入组件，再把标签放进现有页面正文：
+
+```astro
+---
+import Spoiler from '../components/Spoiler.astro';
+---
+
+<p>普通文字中可以嵌入 <Spoiler>隐藏的内容</Spoiler>。</p>
+<p>也可以要求 <Spoiler mode="click">点击后才显示</Spoiler>。</p>
+```
+
+### 普通 Markdown 文章
+
+`.md` 文章不能直接导入 Astro 组件，但可以使用原生 HTML。由于文章布局已经加载了公共支持代码，写入下面这一行即可：
+
+```html
+文字中的 <button type="button" class="spoiler-click" aria-pressed="false"><span>隐藏内容</span></button> 可以点击查看。
+```
+
+对应效果：文字中的 <button type="button" class="spoiler-click" aria-pressed="false"><span>隐藏内容</span></button> 可以点击查看。
+
+将 `spoiler-click` 换成 `spoiler` 就能启用悬停预览。保留内部 `span`，避免在按钮内插入空行、段落或列表；加粗等行内格式可直接使用 `<strong>`。按钮内也不应再嵌套链接、其他按钮或防剧透组件。
+
+### MDX 文章
+
+`.mdx` 在 Markdown 的基础上支持导入组件，所以可以直接使用 `<Spoiler>`。本篇文章也使用这种方式展示交互效果。[Astro Markdown 与 MDX 说明](https://docs.astro.build/en/guides/markdown-content/)
+
+```mdx
+import Spoiler from '../../components/Spoiler.astro';
+
+这是一段普通文字，后面是 <Spoiler>需要隐藏的内容</Spoiler>。
+```
+
+这里的路径适用于 `src/content/blog/` 中的文章。导入语句写在文章信息区之后；文章信息区保留标题、摘要、日期等字段，不要把 JavaScript 导入写进 YAML。
+
+## Prompt Engineering Show
+我觉得这样实现下来其实效果就已经不错了。

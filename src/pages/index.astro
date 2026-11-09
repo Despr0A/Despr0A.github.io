@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import avatar from '../assets/me.png';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import PostList from '../components/PostList.astro';
+import Spoiler from '../components/Spoiler.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const posts = (await getCollection('blog')).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
@@ -32,7 +33,7 @@ const posts = (await getCollection('blog')).sort((a, b) => b.data.pubDate.valueO
 		<section class="home-section" aria-labelledby="intro-title">
 			<h2 id="intro-title">About</h2>
 			<div>
-				<p>听好了，所谓Desperation_Prof就是绝望专家，他见证了超高校级的绝望，是要独自面临失败主义和绥靖主义的斗士，的绝望应对专家参上！</p>
+				<p>学生/<Spoiler>绝望对策专家</Spoiler> <br />我是一名上海交通大学的硕士研究生，目前在做具身智能相关的研究。</p>
 				<div class="section-end"><a class="text-link" href="/about/">More about me <span aria-hidden="true">→</span></a></div>
 			</div>
 		</section>

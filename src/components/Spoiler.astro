@@ -1,0 +1,15 @@
+---
+interface Props {
+	mode?: 'hover' | 'click';
+	image?: boolean;
+}
+
+const { mode = 'hover', image = false } = Astro.props;
+---
+
+<button
+	type="button"
+	class:list={[mode === 'click' ? 'spoiler-click' : 'spoiler', { 'spoiler-image': image }]}
+	aria-pressed="false"
+	title={mode === 'click' ? '点击显示或隐藏' : '移入临时查看，点击保持显示或取消'}
+><span><slot /></span></button>
