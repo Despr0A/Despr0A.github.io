@@ -23,6 +23,10 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# local editor and agent configuration
+.vscode/
+[Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]
+
 # local writing guide
 /写作与发布指南.local.md
 /Astro界面编辑精简指南.local.md
