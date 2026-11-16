@@ -21,6 +21,8 @@ const source = stripTypeScriptTypes(component.match(/<script>([\s\S]*?)<\/script
 
 function setup() {
 	const nodes = new Map();
+	const frames = new Map();
+	let frameId = 0, now = 0;
 	let gameClass;
 	class Element extends EventTarget {
 		textContent = ''; disabled = false; hidden = false;
@@ -37,14 +39,20 @@ function setup() {
 	const document = new EventTarget();
 	runInNewContext(source, {
 		HTMLElement: Element, customElements: { define(name, value) { gameClass = value; } },
-		window, document, AbortController, performance: { now: () => 0 },
-		requestAnimationFrame: () => 1, cancelAnimationFrame() {},
+		window, document, AbortController, performance: { now: () => now },
+		requestAnimationFrame(callback) { frames.set(++frameId, callback); return frameId; },
+		cancelAnimationFrame(id) { frames.delete(id); },
 		IntersectionObserver: class { observe() {} disconnect() {} },
 	});
 	const element = new gameClass();
 	element.connectedCallback();
 	const start = () => nodes.get('[data-start]').dispatchEvent(new Event('click'));
-	return { element, game: element.game, nodes, start, window, document };
+	const step = () => {
+		now += 16;
+		const callbacks = [...frames.values()]; frames.clear();
+		callbacks.forEach(callback => callback(now));
+	};
+	return { element, game: element.game, nodes, start, window, document, frames, step };
 }
 
 test('starts on demand with a fresh score and wave', () => {
@@ -118,3 +126,30 @@ test('pause clears held inputs and resume preserves progress', () => {
 	assert.equal(game.snapshot.enemies.length, 24);
 	assert.equal(nodes.get('.overlay').hidden, true);
 });
+
+for (const paused of [false, true]) {
+	test(`restart resets progress and held controls ${paused ? 'while paused' : 'while playing'}`, () => {
+		const { game, start, nodes, frames, step } = setup(); start();
+		game.setScenario({ enemies: [{ x: 100, y: 396, w: 24, h: 24, row: 0 }] }); game.update(0);
+		assert.equal(game.snapshot.score, -30);
+		assert.equal(game.snapshot.wave, 2);
+		game.keys.add('right'); game.keys.add('fire'); game.update(0.04);
+		assert.equal(game.snapshot.shots.length, 1);
+		if (paused) game.setPaused();
+		game.pointers.set(1, 'left');
+		assert.ok(nodes.get('[data-restart]'), 'A restart button must be wired up');
+		nodes.get('[data-restart]').dispatchEvent(new Event('click'));
+		assert.equal(game.snapshot.score, 0); assert.equal(game.snapshot.wave, 1);
+		assert.equal(game.snapshot.enemies.length, 24); assert.equal(game.snapshot.shots.length, 0);
+		assert.equal(game.player.x, 306);
+		assert.equal(game.keys.size, 0); assert.equal(game.pointers.size, 0);
+		assert.equal(game.snapshot.state, 'playing');
+		assert.equal(nodes.get('.overlay').hidden, true); assert.equal(nodes.get('[data-pause]').disabled, false);
+		assert.equal(nodes.get('[data-score]').textContent, '0000'); assert.equal(nodes.get('[data-wave]').textContent, '1');
+		for (let i = 0; i < 5; i++) nodes.get('[data-restart]').dispatchEvent(new Event('click'));
+		assert.equal(frames.size, 1);
+		const x = game.snapshot.enemies[0].x; step();
+		assert.ok(Math.abs(game.snapshot.enemies[0].x - x - 0.48) < 0.000001);
+		assert.equal(frames.size, 1);
+	});
+}
