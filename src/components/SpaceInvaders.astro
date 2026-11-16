@@ -1,0 +1,217 @@
+<section class="arcade" aria-label="互动小游戏">
+	<space-invaders>
+		<div class="scoreboard" aria-label="游戏数据">
+			<span>得分 <b data-score>0000</b></span><span>波次 <b data-wave>1</b></span>
+		</div>
+		<div class="screen">
+			<canvas width="640" height="420" tabindex="0" aria-label="纸飞机射击游戏画面" aria-describedby="arcade-help">你的浏览器不支持 Canvas 游戏。</canvas>
+			<div class="overlay">
+				<h3 data-title>休息一下</h3>
+				<p data-message>击中得分，漏掉扣分，慢慢玩就好。</p>
+				<button type="button" data-start disabled>开始游戏</button>
+			</div>
+		</div>
+		<div class="controls">
+			<div class="move-controls"><button type="button" data-control="left" aria-label="向左移动">←</button><button type="button" data-control="right" aria-label="向右移动">→</button></div>
+			<button type="button" data-pause disabled>暂停</button>
+			<button type="button" data-control="fire" class="fire">发射 <span aria-hidden="true">↑</span></button>
+		</div>
+		<p id="arcade-help" class="help">← → / A D 移动 · 空格射击 · P 暂停<br />手机可按住下方按钮移动和连发。</p>
+		<p class="sr-only" role="status" data-announcement></p>
+		<noscript><p class="help">启用 JavaScript 后即可开始游戏。</p></noscript>
+	</space-invaders>
+</section>
+
+<style>
+	.arcade { margin-top: 48px; padding-top: 28px; border-top: 1px solid hsl(var(--border)); }
+	space-invaders { display: block; overflow: hidden; border: 1px solid #334551; border-radius: 16px; background: #101b25; color: #d8e8ee; }
+	.scoreboard { display: flex; justify-content: space-between; gap: 8px; padding: 14px 20px; border-bottom: 1px solid #283c48; color: #a4bac5; font-size: 0.8rem; }
+	.scoreboard b { margin-left: 6px; color: #bbefdc; font-family: Consolas, monospace; font-variant-numeric: tabular-nums; }
+	.screen { position: relative; background: #0a121c; }
+	canvas { display: block; width: 100%; height: auto; }
+	canvas:focus-visible { outline: 2px solid #a7e7d0; outline-offset: -3px; }
+	.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; background: #0a121cce; text-align: center; }
+	.overlay[hidden] { display: none; }
+	.overlay h3 { font-size: clamp(1rem, 3vw, 1.6rem); margin-bottom: 8px; color: #eef8f8; }
+	.overlay p { color: #b2c4cf; font-size: 0.85rem; margin-bottom: 18px; }
+	button { min-width: 44px; min-height: 44px; padding: 8px 18px; border: 1px solid #415966; border-radius: 8px; background: #1c2e3a; color: #d8e8ee; white-space: nowrap; }
+	button:hover:not(:disabled), button:active:not(:disabled) { background: #304c59; }
+	button:focus-visible { outline-color: #a7e7d0; outline-offset: -3px; }
+	button:disabled { cursor: default; opacity: 0.45; }
+	[data-start], .fire { background: #b7e8d5; color: #122c28; border-color: #b7e8d5; font-weight: 600; }
+	[data-start]:hover:not(:disabled), .fire:active:not(:disabled), .fire:hover:not(:disabled) { background: #d1f4e7; }
+	.controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 20px 8px; }
+	.move-controls { display: flex; gap: 8px; }
+	[data-control] { touch-action: none; user-select: none; -webkit-user-select: none; }
+	.help { padding: 0 16px; margin: 8px 0 16px; text-align: center; color: #a4bac5; font-size: 0.75rem; }
+	@media (max-width: 450px) {
+		.scoreboard { padding: 12px; font-size: 0.7rem; }
+		.controls { padding-inline: 10px; }
+		button { padding-inline: 10px; font-size: 0.85rem; }
+		.overlay p { margin-bottom: 12px; font-size: 0.75rem; }
+	}
+</style>
+
+<script>
+	class SpaceInvaders extends HTMLElement {
+		connectedCallback() {
+			const canvas = this.querySelector('canvas')!;
+			const context = canvas.getContext('2d');
+			if (!context) return;
+			const ctx = context;
+			const overlay = this.querySelector<HTMLElement>('.overlay')!;
+			const start = this.querySelector<HTMLButtonElement>('[data-start]')!;
+			const pause = this.querySelector<HTMLButtonElement>('[data-pause]')!;
+			const scoreLabel = this.querySelector('[data-score]')!;
+			const waveLabel = this.querySelector('[data-wave]')!;
+			const announcement = this.querySelector('[data-announcement]')!;
+			const { signal } = this.controller;
+			const shapes = ['circle', 'square', 'triangle', 'diamond', 'pentagon', 'hexagon'] as const;
+			type Body = { x: number; y: number; w: number; h: number };
+			type Enemy = Body & { row: number; shape: typeof shapes[number] };
+			type Shot = Body & { color: string };
+			let state: 'ready' | 'playing' | 'paused' = 'ready';
+			let score = 0, wave = 1, direction = 1;
+			let cooldown = 0, lastTime = 0;
+			let enemies: Enemy[] = [], shots: Shot[] = [];
+			const player: Body = { x: 306, y: 376, w: 28, h: 20 };
+			const keys = new Set<string>();
+			const pointers = new Map<number, string>();
+			const fireShot = () => shots.push({ x: player.x + 12, y: player.y - 10, w: 4, h: 12, color: `hsl(${Math.floor(Math.random() * 360)} 80% 72%)` });
+			const overlaps = (a: Body, b: Body) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+			const points = (enemy: Enemy) => (3 - enemy.row) * 10;
+			const held = (action: string) => keys.has(action) || [...pointers.values()].includes(action);
+			const clearInput = () => { keys.clear(); pointers.clear(); };
+			const updateScore = () => {
+				scoreLabel.textContent = `${score < 0 ? '-' : ''}${String(Math.abs(score)).padStart(4, '0')}`;
+				waveLabel.textContent = String(wave);
+			};
+			const spawnWave = () => {
+				enemies = Array.from({ length: 24 }, (_, i) => ({
+					x: 88 + (i % 8) * 56, y: 52 + Math.floor(i / 8) * 42, w: 24, h: 24,
+					row: Math.floor(i / 8), shape: shapes[Math.floor(Math.random() * shapes.length)],
+				}));
+				shots = []; direction = 1; cooldown = 0;
+				player.x = 306;
+				updateScore();
+			};
+			const draw = () => {
+				ctx.fillStyle = '#0a121c'; ctx.fillRect(0, 0, 640, 420);
+				ctx.fillStyle = '#273e49'; ctx.fillRect(16, 402, 608, 1);
+				ctx.fillStyle = '#b9c5cc';
+				enemies.forEach(enemy => {
+					if (enemy.shape === 'square') { ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h); return; }
+					ctx.beginPath();
+					if (enemy.shape === 'circle') ctx.arc(enemy.x + 12, enemy.y + 12, 12, 0, Math.PI * 2);
+					else {
+						const sides = { triangle: 3, diamond: 4, pentagon: 5, hexagon: 6 }[enemy.shape];
+						for (let i = 0; i < sides; i++) {
+							const angle = i * Math.PI * 2 / sides - Math.PI / 2;
+							const x = enemy.x + 12 + Math.cos(angle) * 12;
+							const y = enemy.y + 12 + Math.sin(angle) * 12;
+							if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+						}
+						ctx.closePath();
+					}
+					ctx.fill();
+				});
+				ctx.fillStyle = '#eef2f4';
+				ctx.beginPath();
+				ctx.moveTo(player.x + 14, player.y);
+				ctx.lineTo(player.x, player.y + 20);
+				ctx.lineTo(player.x + 14, player.y + 14);
+				ctx.lineTo(player.x + 28, player.y + 20);
+				ctx.closePath(); ctx.fill();
+				ctx.strokeStyle = '#52636f'; ctx.lineWidth = 1;
+				ctx.beginPath(); ctx.moveTo(player.x + 14, player.y + 2); ctx.lineTo(player.x + 14, player.y + 14); ctx.stroke();
+				shots.forEach(shot => { ctx.fillStyle = shot.color; ctx.fillRect(shot.x, shot.y, shot.w, shot.h); });
+			};
+			const showOverlay = (title: string, message: string, button: string) => {
+				this.querySelector('[data-title]')!.textContent = title;
+				this.querySelector('[data-message]')!.textContent = message;
+				start.textContent = button; overlay.hidden = false;
+				announcement.textContent = `${title} ${message}`;
+			};
+			const setPaused = () => {
+				if (state !== 'playing') return;
+				state = 'paused'; clearInput(); cancelAnimationFrame(this.frame);
+				pause.disabled = true;
+				showOverlay('已暂停', '准备好后继续。', '继续游戏');
+			};
+			const update = (dt: number) => {
+				cooldown -= dt;
+				player.x = Math.max(12, Math.min(600, player.x + (Number(held('right')) - Number(held('left'))) * 270 * dt));
+				if (held('fire') && cooldown <= 0) {
+					fireShot(); cooldown = 0.23;
+				}
+				const speed = 22 + Math.min(wave, 3) * 8 + (24 - enemies.length) * 2;
+				const movement = direction * speed * dt;
+				if (enemies.some(enemy => enemy.x + movement < 12 || enemy.x + enemy.w + movement > 628)) {
+					direction *= -1; enemies.forEach(enemy => { enemy.y += 16; });
+				} else enemies.forEach(enemy => { enemy.x += movement; });
+				enemies = enemies.filter(enemy => {
+					if (enemy.y + enemy.h < 420) return true;
+					score -= points(enemy); updateScore(); return false;
+				});
+				shots.forEach(shot => { shot.y -= 420 * dt; });
+				shots = shots.filter(shot => {
+					const index = enemies.findIndex(enemy => overlaps(shot, enemy));
+					if (index < 0) return shot.y + shot.h > 0;
+					score += points(enemies[index]); enemies.splice(index, 1); updateScore(); return false;
+				});
+				if (!enemies.length) {
+					wave++; spawnWave(); announcement.textContent = `第 ${wave} 波开始`;
+				}
+			};
+			const tick = (now: number) => {
+				if (state !== 'playing') return;
+				update(Math.min((now - lastTime) / 1000, 0.04)); lastTime = now; draw();
+				if (state === 'playing') this.frame = requestAnimationFrame(tick);
+			};
+			start.disabled = false;
+			start.addEventListener('click', () => {
+				if (state === 'playing') return;
+				if (state !== 'paused') { score = 0; wave = 1; spawnWave(); }
+				clearInput(); state = 'playing'; overlay.hidden = true; pause.disabled = false;
+				announcement.textContent = `第 ${wave} 波，游戏开始`;
+				canvas.focus({ preventScroll: true }); lastTime = performance.now();
+				this.frame = requestAnimationFrame(tick);
+			}, { signal });
+			pause.addEventListener('click', () => { setPaused(); start.focus({ preventScroll: true }); }, { signal });
+			const keyActions: Record<string, string> = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'fire' };
+			canvas.addEventListener('keydown', event => {
+				if (event.code === 'KeyP' && state === 'playing') { event.preventDefault(); setPaused(); start.focus({ preventScroll: true }); }
+				if (state === 'playing' && keyActions[event.code]) { event.preventDefault(); keys.add(keyActions[event.code]); }
+			}, { signal });
+			window.addEventListener('keyup', event => { keys.delete(keyActions[event.code]); }, { signal });
+			this.querySelectorAll<HTMLButtonElement>('[data-control]').forEach(button => {
+				button.addEventListener('pointerdown', event => {
+					if (state !== 'playing' || event.button !== 0) return;
+					event.preventDefault(); button.setPointerCapture(event.pointerId);
+					pointers.set(event.pointerId, button.dataset.control!);
+					canvas.focus({ preventScroll: true });
+				}, { signal });
+				for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+					button.addEventListener(type, event => { pointers.delete((event as PointerEvent).pointerId); }, { signal });
+				}
+				button.addEventListener('contextmenu', event => event.preventDefault(), { signal });
+				button.addEventListener('click', event => {
+					if (event.detail !== 0 || state !== 'playing') return;
+					if (button.dataset.control === 'fire') { fireShot(); }
+					else player.x = Math.max(12, Math.min(600, player.x + (button.dataset.control === 'left' ? -24 : 24)));
+				}, { signal });
+			});
+			window.addEventListener('blur', setPaused, { signal });
+			document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(); }, { signal });
+			this.addEventListener('focusout', event => { if (!this.contains(event.relatedTarget as Node | null)) setPaused(); }, { signal });
+			this.observer = new IntersectionObserver(entries => { if (!entries[0].isIntersecting) setPaused(); });
+			this.observer.observe(this);
+			spawnWave(); draw();
+		}
+		controller = new AbortController();
+		frame = 0;
+		observer?: IntersectionObserver;
+		disconnectedCallback() { this.controller.abort(); cancelAnimationFrame(this.frame); this.observer?.disconnect(); }
+	}
+	customElements.define('space-invaders', SpaceInvaders);
+</script>
